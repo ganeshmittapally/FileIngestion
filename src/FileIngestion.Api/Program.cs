@@ -7,8 +7,8 @@ using OpenTelemetry.Trace;
 using FileIngestion.Application.Ports;
 using FileIngestion.Infrastructure.Adapters;
 using FileIngestion.Api.Middleware;
-using Microsoft.AspNetCore.Http;
 using FileIngestion.Application.Services;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -96,6 +96,17 @@ if (!string.IsNullOrEmpty(cosmosEndpoint) && !string.IsNullOrEmpty(cosmosKey))
 // Application services
 builder.Services.AddScoped<IFileService, FileService>();
 
+// Register default (no-op) event publisher and optionally replace it at runtime
+builder.Services.AddSingleton<FileIngestion.Application.Ports.IEventPublisher, FileIngestion.Infrastructure.Adapters.NoOpEventPublisher>();
+
+// Attempt to call optional runtime registration in the Infrastructure assembly (compiled conditionally)
+var regType = Type.GetType("FileIngestion.Infrastructure.ServiceBusRegistration, FileIngestion.Infrastructure");
+if (regType is not null)
+{
+    var method = regType.GetMethod("Register", BindingFlags.Public | BindingFlags.Static);
+    method?.Invoke(null, new object[] { builder.Services, builder.Configuration });
+}
+
 var app = builder.Build();
 
 // Use API key middleware (validates X-API-KEY against configuration ApiKey)
@@ -147,6 +158,17 @@ app.MapPost("/files", async (HttpRequest request, IFileService fileService, Canc
 
     await using var stream = file.OpenReadStream();
     var (url, metadataId) = await fileService.UploadAsync(stream, file.FileName, file.ContentType ?? "application/octet-stream", file.Length, ct);
+
+// Register default (no-op) event publisher and optionally replace it
+builder.Services.AddSingleton<FileIngestion.Application.Ports.IEventPublisher, FileIngestion.Infrastructure.Adapters.NoOpEventPublisher>();
+
+// Attempt to call optional runtime registration in the Infrastructure assembly
+var regType = Type.GetType("FileIngestion.Infrastructure.ServiceBusRegistration, FileIngestion.Infrastructure");
+if (regType is not null)
+{
+    var method = regType.GetMethod("Register", BindingFlags.Public | BindingFlags.Static);
+    method?.Invoke(null, new object[] { builder.Services, builder.Configuration });
+}
 
     return Results.Ok(new { url, metadataId });
 }).WithOpenApi();

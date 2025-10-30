@@ -7,11 +7,13 @@ public class FileService : IFileService
 {
     private readonly IFileRepository _fileRepo;
     private readonly IMetadataRepository? _metadataRepo;
+    private readonly FileIngestion.Application.Ports.IEventPublisher? _eventPublisher;
 
-    public FileService(IFileRepository fileRepo, IMetadataRepository? metadataRepo = null)
+    public FileService(IFileRepository fileRepo, IMetadataRepository? metadataRepo = null, FileIngestion.Application.Ports.IEventPublisher? eventPublisher = null)
     {
         _fileRepo = fileRepo ?? throw new ArgumentNullException(nameof(fileRepo));
         _metadataRepo = metadataRepo;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<(string Url, string? MetadataId)> UploadAsync(System.IO.Stream content, string fileName, string contentType, long size, CancellationToken cancellationToken = default)
@@ -23,6 +25,20 @@ public class FileService : IFileService
 
         var metadata = new FileMetadata(Guid.NewGuid().ToString(), fileName, contentType, size, url, DateTime.UtcNow);
         var id = await _metadataRepo.CreateMetadataAsync(metadata, cancellationToken);
+
+        // Publish event (best-effort)
+        if (_eventPublisher != null)
+        {
+            try
+            {
+                await _eventPublisher.PublishAsync(metadata, cancellationToken);
+            }
+            catch
+            {
+                // swallow publish errors - do not fail the upload
+            }
+        }
+
         return (url, id);
     }
 
