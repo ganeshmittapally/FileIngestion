@@ -1,0 +1,35 @@
+name: Publish to ACR
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Set ACR variables
+      run: |
+        echo "ACR_NAME=${{ secrets.ACR_NAME }}" >> $GITHUB_ENV
+
+    - name: Build and push image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: deploy/docker/Dockerfile
+        push: true
+        tags: ${{ secrets.ACR_NAME }}.azurecr.io/fileingestion:latest
+
+    - name: Logout of Azure
+      run: az logout
