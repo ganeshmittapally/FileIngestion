@@ -1,0 +1,99 @@
+openapi: 3.1.0
+info:
+  title: FileIngestion API
+  version: 1.0.0
+  description: >-
+    File Ingestion microservice API. Supports file upload and metadata storage.
+    This OpenAPI specification can be used to generate clients or import into tools like Postman.
+servers:
+  - url: https://{{host}}/  # replace {{host}} with your API host, e.g., localhost:5001 or api.example.com
+    description: API server (replace host variable before use)
+paths:
+  /weatherforecast:
+    get:
+      summary: Get sample weather forecast
+      operationId: getWeatherForecast
+      responses:
+        '200':
+          description: Array of weather forecast objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WeatherForecast'
+  /files:
+    post:
+      summary: Upload a file with optional metadata
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                metadata:
+                  type: string
+                  description: Optional JSON string of metadata to store
+      responses:
+        '200':
+          description: Upload result with URL and metadata id (if stored)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          description: Bad request
+components:
+  schemas:
+    WeatherForecast:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        temperatureC:
+          type: integer
+        temperatureF:
+          type: integer
+        summary:
+          type: string
+    FileMetadata:
+      type: object
+      properties:
+        id:
+          type: string
+        fileName:
+          type: string
+        contentType:
+          type: string
+        size:
+          type: integer
+        path:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    UploadResponse:
+      type: object
+      properties:
+        url:
+          type: string
+        metadataId:
+          type: string
+variables:
+  host:
+    default: "localhost:5001"
+    description: "Replace with your API host"
+security:
+  - ApiKeyAuth: []
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY

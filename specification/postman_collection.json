@@ -1,0 +1,72 @@
+{
+  "info": {
+    "name": "FileIngestion API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for FileIngestion API. Replace {{host}} and add API key in header."
+  },
+  "item": [
+    {
+      "name": "Get Weather Forecast",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://{{host}}/weatherforecast",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "weatherforecast"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Upload File",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-KEY",
+            "value": "{{api_key}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "metadata",
+              "type": "text",
+              "value": "{ \"purpose\": \"ingest\" }"
+            }
+          ]
+        },
+        "url": {
+          "raw": "https://{{host}}/files",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "files"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "host",
+      "value": "localhost:5001"
+    },
+    {
+      "key": "api_key",
+      "value": "REPLACE_WITH_API_KEY"
+    }
+  ]
+}

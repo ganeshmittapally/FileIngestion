@@ -22,6 +22,14 @@ Add the following secrets in the GitHub repository (Settings → Secrets → Act
 - `ACR_NAME` — the ACR name
 - `DATADOG_API_KEY` — Datadog API key for monitoring (optional)
 
+## Observability placeholders
+The application includes placeholders for observability. Configure these values in `src/FileIngestion.Api/appsettings.json` or via environment variables in your deployment platform.
+
+- `Observability:Datadog:ApiKey` — Datadog API key (set as `DATADOG_API_KEY` secret in GitHub if used in workflows)
+- `Observability:Datadog:OtLPEndpoint` — OTLP endpoint for exporting traces/metrics (e.g., `https://otlp.example.com:4317`)
+
+If these are not provided the app will fall back to the console exporter for local development.
+
 ## Workflow
 The workflow `publish-to-acr.yml` will trigger on pushes to `main` and build the Docker image using the Dockerfile at `deploy/docker/Dockerfile` and push to the configured ACR.
 
