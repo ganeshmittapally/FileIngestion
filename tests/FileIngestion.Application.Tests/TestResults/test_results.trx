@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="c4c115b9-536b-4ba8-a4df-1ee110d4bda6" name="prasu@DESKTOP-0FSNDA7 2025-10-30 12:30:50" runUser="DESKTOP-0FSNDA7\prasu" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2025-10-30T12:30:50.6163584-07:00" queuing="2025-10-30T12:30:50.6163589-07:00" start="2025-10-30T12:30:49.6654590-07:00" finish="2025-10-30T12:30:50.6243204-07:00" />
+  <TestSettings name="default" id="e454f743-b990-474e-9e17-7fc4780c31b5">
+    <Deployment runDeploymentRoot="prasu_DESKTOP-0FSNDA7_2025-10-30_12_30_50" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="96666fa7-5568-40be-b853-09c2f3a63c88" testId="81afc6cf-962f-cd59-dd1d-55fd4465b5a3" testName="FileIngestion.Application.Tests.UnitTest1.Test1" computerName="DESKTOP-0FSNDA7" duration="00:00:00.0021691" startTime="2025-10-30T12:30:50.4623618-07:00" endTime="2025-10-30T12:30:50.4623811-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="96666fa7-5568-40be-b853-09c2f3a63c88" />
+    <UnitTestResult executionId="c647c5d3-2e59-4420-b48e-21e0f6e71f5a" testId="8bf2b3cf-548e-2c33-b03c-cf3b95bc4bc1" testName="FileIngestion.Application.Tests.BasicTests.Sanity" computerName="DESKTOP-0FSNDA7" duration="00:00:00.0046426" startTime="2025-10-30T12:30:50.4645698-07:00" endTime="2025-10-30T12:30:50.4645699-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c647c5d3-2e59-4420-b48e-21e0f6e71f5a" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="FileIngestion.Application.Tests.UnitTest1.Test1" storage="c:\users\prasu\onedrive\public\projects\fileingestion\tests\fileingestion.application.tests\bin\debug\net8.0\fileingestion.application.tests.dll" id="81afc6cf-962f-cd59-dd1d-55fd4465b5a3">
+      <Execution id="96666fa7-5568-40be-b853-09c2f3a63c88" />
+      <TestMethod codeBase="C:\Users\prasu\OneDrive\Public\Projects\FileIngestion\tests\FileIngestion.Application.Tests\bin\Debug\net8.0\FileIngestion.Application.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="FileIngestion.Application.Tests.UnitTest1" name="Test1" />
+    </UnitTest>
+    <UnitTest name="FileIngestion.Application.Tests.BasicTests.Sanity" storage="c:\users\prasu\onedrive\public\projects\fileingestion\tests\fileingestion.application.tests\bin\debug\net8.0\fileingestion.application.tests.dll" id="8bf2b3cf-548e-2c33-b03c-cf3b95bc4bc1">
+      <Execution id="c647c5d3-2e59-4420-b48e-21e0f6e71f5a" />
+      <TestMethod codeBase="C:\Users\prasu\OneDrive\Public\Projects\FileIngestion\tests\FileIngestion.Application.Tests\bin\Debug\net8.0\FileIngestion.Application.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="FileIngestion.Application.Tests.BasicTests" name="Sanity" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="81afc6cf-962f-cd59-dd1d-55fd4465b5a3" executionId="96666fa7-5568-40be-b853-09c2f3a63c88" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8bf2b3cf-548e-2c33-b03c-cf3b95bc4bc1" executionId="c647c5d3-2e59-4420-b48e-21e0f6e71f5a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="2" executed="2" passed="2" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.3.1+6b60a9e56a (64-bit .NET 8.0.21)&#xD;
+[xUnit.net 00:00:00.09]   Discovering: FileIngestion.Application.Tests&#xD;
+[xUnit.net 00:00:00.14]   Discovered:  FileIngestion.Application.Tests&#xD;
+[xUnit.net 00:00:00.14]   Starting:    FileIngestion.Application.Tests&#xD;
+[xUnit.net 00:00:00.19]   Finished:    FileIngestion.Application.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

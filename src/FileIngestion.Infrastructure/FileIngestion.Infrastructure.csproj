@@ -8,7 +8,32 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
-    <PackageReference Include="Azure.Cosmos" Version="4.10.1" />
+  </ItemGroup>
+
+  <!-- Azure.Cosmos package and Cosmos-backed adapter are optional.
+       Set the MSBuild property UseCosmos=true and provide a compatible
+       Azure.Cosmos version in the 'CosmosPackageVersion' property to
+       enable the Cosmos-backed adapter and package reference.
+       Example: dotnet build -p:UseCosmos=true -p:CosmosPackageVersion=4.0.0-preview3 -->
+  <ItemGroup Condition="'$(UseCosmos)' == 'true'">
+    <PackageReference Include="Azure.Cosmos" Version="$(CosmosPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FileIngestion.Application\FileIngestion.Application.csproj" />
+    <ProjectReference Include="..\FileIngestion.Shared\FileIngestion.Shared.csproj" />
+  </ItemGroup>
+
+  <!-- Include the Cosmos-specific implementation only when UseCosmos is true -->
+  <!-- Remove the cosmos-specific file from the default glob-based compile
+       so it is only compiled when explicitly included by the conditional
+       ItemGroup below. This prevents duplicate type definitions. -->
+  <ItemGroup>
+    <Compile Remove="Adapters\CosmosMetadataRepository.Cosmos.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseCosmos)' == 'true'">
+    <Compile Include="Adapters\CosmosMetadataRepository.Cosmos.cs" />
   </ItemGroup>
 
 </Project>

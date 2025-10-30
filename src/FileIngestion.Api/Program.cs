@@ -8,6 +8,7 @@ using FileIngestion.Application.Ports;
 using FileIngestion.Infrastructure.Adapters;
 using FileIngestion.Api.Middleware;
 using Microsoft.AspNetCore.Http;
+using FileIngestion.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -92,6 +93,9 @@ if (!string.IsNullOrEmpty(cosmosEndpoint) && !string.IsNullOrEmpty(cosmosKey))
     builder.Services.AddScoped<IMetadataRepository, CosmosMetadataRepository>();
 }
 
+// Application services
+builder.Services.AddScoped<IFileService, FileService>();
+
 var app = builder.Build();
 
 // Use API key middleware (validates X-API-KEY against configuration ApiKey)
@@ -126,8 +130,8 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
-// File upload endpoint (simple implementation)
-app.MapPost("/files", async (HttpRequest request, IFileRepository fileRepo, IMetadataRepository? metadataRepo, CancellationToken ct) =>
+// File upload endpoint (delegates orchestration to IFileService)
+app.MapPost("/files", async (HttpRequest request, IFileService fileService, CancellationToken ct) =>
 {
     if (!request.HasFormContentType)
     {
@@ -142,16 +146,35 @@ app.MapPost("/files", async (HttpRequest request, IFileRepository fileRepo, IMet
     }
 
     await using var stream = file.OpenReadStream();
-    var url = await fileRepo.UploadAsync(stream, file.ContentType ?? "application/octet-stream", ct);
-
-    string? metadataId = null;
-    if (metadataRepo != null)
-    {
-        var metadata = new { fileName = file.FileName, contentType = file.ContentType, size = file.Length, path = url };
-        metadataId = await metadataRepo.CreateMetadataAsync(metadata, ct);
-    }
+    var (url, metadataId) = await fileService.UploadAsync(stream, file.FileName, file.ContentType ?? "application/octet-stream", file.Length, ct);
 
     return Results.Ok(new { url, metadataId });
+}).WithOpenApi();
+
+// List metadata (paged)
+app.MapGet("/files", async (int page, int pageSize, IFileService fileService, CancellationToken ct) =>
+{
+    page = page <= 0 ? 1 : page;
+    pageSize = pageSize <= 0 ? 50 : pageSize;
+    var items = await fileService.ListMetadataAsync(page, pageSize, ct);
+    return Results.Ok(items);
+}).WithOpenApi();
+
+// Get metadata by id
+app.MapGet("/files/{id}", async (string id, IFileService fileService, CancellationToken ct) =>
+{
+    var item = await fileService.GetMetadataAsync(id, ct);
+    return item is null ? Results.NotFound() : Results.Ok(item);
+}).WithOpenApi();
+
+// Delete file and metadata
+app.MapDelete("/files/{id}", async (string id, IFileService fileService, CancellationToken ct) =>
+{
+    var item = await fileService.GetMetadataAsync(id, ct);
+    if (item is null) return Results.NotFound();
+
+    await fileService.DeleteAsync(id, ct);
+    return Results.NoContent();
 }).WithOpenApi();
 
 app.Run();
