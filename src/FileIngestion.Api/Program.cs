@@ -6,6 +6,8 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using FileIngestion.Application.Ports;
 using FileIngestion.Infrastructure.Adapters;
+using FileIngestion.Api.Middleware;
+using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,18 +15,51 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracerProviderBuilder =>
     {
+        var rb = ResourceBuilder.CreateDefault().AddService("FileIngestion");
         tracerProviderBuilder
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("FileIngestion"))
+            .SetResourceBuilder(rb)
             .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddConsoleExporter();
+            .AddHttpClientInstrumentation();
+
+        // If OTLP endpoint is configured, use OTLP exporter (Datadog/collector)
+        var otlpEndpoint = builder.Configuration["Observability:Datadog:OtLPEndpoint"];
+        var datadogApiKey = builder.Configuration["Observability:Datadog:ApiKey"];
+        if (!string.IsNullOrEmpty(otlpEndpoint))
+        {
+            tracerProviderBuilder.AddOtlpExporter(o =>
+            {
+                o.Endpoint = new Uri(otlpEndpoint);
+                if (!string.IsNullOrEmpty(datadogApiKey))
+                {
+                    o.Headers = $"DD-API-KEY={datadogApiKey}";
+                }
+            });
+        }
+        else
+        {
+            tracerProviderBuilder.AddConsoleExporter();
+        }
     })
     .WithMetrics(metricsBuilder =>
     {
         metricsBuilder
             .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddConsoleExporter();
+            .AddHttpClientInstrumentation();
+
+        var otlpEndpoint = builder.Configuration["Observability:Datadog:OtLPEndpoint"];
+        var datadogApiKey = builder.Configuration["Observability:Datadog:ApiKey"];
+        if (!string.IsNullOrEmpty(otlpEndpoint))
+        {
+            metricsBuilder.AddOtlpExporter(o =>
+            {
+                o.Endpoint = new Uri(otlpEndpoint);
+                if (!string.IsNullOrEmpty(datadogApiKey)) o.Headers = $"DD-API-KEY={datadogApiKey}";
+            });
+        }
+        else
+        {
+            metricsBuilder.AddConsoleExporter();
+        }
     });
 
 // Swagger/OpenAPI
@@ -58,6 +93,9 @@ if (!string.IsNullOrEmpty(cosmosEndpoint) && !string.IsNullOrEmpty(cosmosKey))
 }
 
 var app = builder.Build();
+
+// Use API key middleware (validates X-API-KEY against configuration ApiKey)
+app.UseMiddleware<FileIngestion.Api.Middleware.ApiKeyMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

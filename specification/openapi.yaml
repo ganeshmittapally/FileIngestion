@@ -48,7 +48,61 @@ paths:
                 $ref: '#/components/schemas/UploadResponse'
         '400':
           description: Bad request
-components:
+  /files:
+    get:
+      summary: List metadata items (paged)
+      operationId: listFiles
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Array of metadata
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FileMetadata'
+  /files/{id}:
+    get:
+      summary: Get metadata by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadata'
+        '404':
+          description: Not found
+    delete:
+      summary: Delete file and metadata by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
   schemas:
     WeatherForecast:
       type: object
