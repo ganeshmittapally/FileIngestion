@@ -1,5 +1,6 @@
 using Azure.Cosmos;
 using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.Http;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -31,13 +32,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Configure Azure SDK clients from configuration (expecting connection strings or endpoints in configuration)
+// Azure configuration placeholders. We intentionally do not create resources at startup.
 var blobConnection = builder.Configuration["Azure:Blob:ConnectionString"];
 var blobContainer = builder.Configuration["Azure:Blob:Container"] ?? "file-ingestion";
 if (!string.IsNullOrEmpty(blobConnection))
 {
+    // Register clients; resource creation is handled by Terraform or admin outside the app.
     var blobService = new BlobServiceClient(blobConnection);
     var containerClient = blobService.GetBlobContainerClient(blobContainer);
-    containerClient.CreateIfNotExists();
     builder.Services.AddSingleton(containerClient);
     builder.Services.AddScoped<IFileRepository, BlobFileRepository>();
 }
@@ -49,9 +51,9 @@ var cosmosContainer = builder.Configuration["Azure:Cosmos:Container"] ?? "Metada
 if (!string.IsNullOrEmpty(cosmosEndpoint) && !string.IsNullOrEmpty(cosmosKey))
 {
     var cosmosClient = new CosmosClient(cosmosEndpoint, cosmosKey);
-    var db = await cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDatabase);
-    var container = await db.Database.CreateContainerIfNotExistsAsync(cosmosContainer, "/id");
-    builder.Services.AddSingleton(container.Container);
+    // Get container reference; do not create resources from the application in production.
+    var container = cosmosClient.GetContainer(cosmosDatabase, cosmosContainer);
+    builder.Services.AddSingleton(container);
     builder.Services.AddScoped<IMetadataRepository, CosmosMetadataRepository>();
 }
 
@@ -85,6 +87,34 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
+
+// File upload endpoint (simple implementation)
+app.MapPost("/files", async (HttpRequest request, IFileRepository fileRepo, IMetadataRepository? metadataRepo, CancellationToken ct) =>
+{
+    if (!request.HasFormContentType)
+    {
+        return Results.BadRequest("Expected multipart/form-data");
+    }
+
+    var form = await request.ReadFormAsync(ct);
+    var file = form.Files.FirstOrDefault();
+    if (file == null)
+    {
+        return Results.BadRequest("No file provided");
+    }
+
+    await using var stream = file.OpenReadStream();
+    var url = await fileRepo.UploadAsync(stream, file.ContentType ?? "application/octet-stream", ct);
+
+    string? metadataId = null;
+    if (metadataRepo != null)
+    {
+        var metadata = new { fileName = file.FileName, contentType = file.ContentType, size = file.Length, path = url };
+        metadataId = await metadataRepo.CreateMetadataAsync(metadata, ct);
+    }
+
+    return Results.Ok(new { url, metadataId });
+}).WithOpenApi();
 
 app.Run();
 
